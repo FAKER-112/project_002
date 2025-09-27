@@ -100,7 +100,7 @@ class LinearRegresionModel(Model):  # Typo: should be LinearRegressionModel
         return reg.score(x_test, y_test)
 
 
-class RndomForestModel(Model):  # Typo: should be RandomForestModel
+class RandomForestModel(Model):  # Typo: should be RandomForestModel
     """
     Random Forest model
     """

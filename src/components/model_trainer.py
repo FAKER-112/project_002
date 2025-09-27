@@ -1,0 +1,47 @@
+import logging 
+import mlflow
+import pandas as pd
+from src.utills import HyperParameter, LinearRegresionModel, LightGBMModel, XGBoostModel,RandomForestModel
+from .config import ModelNameConfig
+from sklearn.base import RegressorMixin
+from zenml import step
+from zenml.client import Client
+from zenml.logger import get_logger
+
+
+experimental_tracker = Client().activate_stack.experimental_tracker
+logger = get_logger
+@step(experiment_tracker=experimental_tracker.name)
+def tran(
+    x_train: pd.DataFrame,
+    x_test: pd.DataFrame,
+    y_train: pd.Series,
+    y_test: pd.Series,
+    config: ModelNameConfig,
+)-> RegressorMixin:
+    try:
+        model= None
+        tuner= None
+        if config.model_name == "LinearRegression":
+            model= LinearRegresionModel()
+            mlflow.sklearn.autolog()
+        elif config.model_name == "LightGBM":
+            model= LightGBMModel()  
+            mlflow.lightgbm.autolog()
+        elif config.model_name == "XGBoost":
+            model= XGBoostModel()
+            mlflow.xgboost.autolog()
+        elif config.model_name == "RandomForest":
+            model= RandomForestModel()
+            mlflow.sklearn.autolog()
+        tuner= HyperParameter(model,x_train=x_train,y_train=y_train,x_test=x_test,y_test=y_test)
+        if config.fine_tuning== True:
+            best_param= tuner.optimize()
+            trained_model= model.train( x_train, y_train, **best_param)
+
+        else:
+            trained_model = model.train(x_train, y_train)
+        return trained_model
+    except Exception as e:
+        logging.error(e)
+        raise e
