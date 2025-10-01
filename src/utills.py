@@ -10,7 +10,7 @@ import xgboost as xgb
 from lightgbm import LGBMRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
-
+from sklearn.metrics import r2_score, mean_squared_error
 
 class DataStrategy(ABC):
     """
@@ -187,3 +187,69 @@ class HyperParameter:
             n_trials=n_trials,
         )
         return study.best_trial.params
+
+
+class  Evaluation(ABC):
+    @abstractmethod
+    def calculate_score(self, y_pred:np.ndarray, y_true:np.ndarray)->float:
+        pass
+
+class MSE(Evaluation):
+    """
+    Evaluation strategy that uses Mean Squared Error (MSE)
+    """
+    def calculate_score(self, y_pred:np.ndarray, y_true:np.ndarray)->float:
+        """
+        Args:
+            y_true: np.ndarray
+            y_pred: np.ndarray
+        Returns:
+            mse: float
+        """
+        try:
+            logging.info('calculate_score method of the MSE class')
+            mse= mean_squared_error(y_true,y_pred)
+            logging.info(f'mean squared error is {mse}')
+            return mse
+        except Exception as e:
+            logging.error(
+                "Exception occurred in calculate_score method of the MSE class. Exception message:  "
+                + str(e)
+            )
+            raise e
+        
+class R2score(Evaluation):
+    """
+    Evaluation strategy that uses R2 Score
+    """
+    def calculate_score(self, y_true:np.ndarray, y_pred:np.ndarray)->float:
+        
+        try:
+            logging.info('calculate_score method of R2_score')
+            r2score= r2_score(y_true,y_pred)
+            logging.info(f'r2 score is {r2score}')
+            return r2score
+        
+        except Exception as e:
+            raise e
+        
+class RMSE(Evaluation):
+    """
+    Evaluation strategy that uses Root Mean Squared Error (RMSE)
+    """
+    def calculate_score(self, y_pred, y_true):
+        """
+        Args:
+            y_true: np.ndarray
+            y_pred: np.ndarray
+        Returns:
+            rmse: float
+        """
+        try:
+            logging.info('calculating the rmse score')
+            rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+            logging.info(f'rmse is {rmse}')
+            return rmse 
+            
+        except Exception as e:
+            raise e  
