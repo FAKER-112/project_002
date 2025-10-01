@@ -12,7 +12,7 @@ from zenml.logger import get_logger
 experimental_tracker = Client().activate_stack.experimental_tracker
 logger = get_logger
 @step(experiment_tracker=experimental_tracker.name)
-def tran(
+def train(
     x_train: pd.DataFrame,
     x_test: pd.DataFrame,
     y_train: pd.Series,
