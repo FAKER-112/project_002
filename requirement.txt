@@ -7,3 +7,12 @@ xgboost==1.5.2
 markupsafe==1.1.1
 zenml==0.35.1
 -e.
+
+
+zenml experiment-tracker register mlflow_tracker --flavor=mlflow
+zenml stack register mlflow_stack -o default -a default -e mlflow_tracker
+zenml stack set mlflow_stack
+zenml stack describe
+ORCHESTRATOR      default
+ARTIFACT_STORE    default
+EXPERIMENT_TRACKER mlflow_tracker

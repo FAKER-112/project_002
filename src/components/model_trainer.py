@@ -9,9 +9,10 @@ from zenml.client import Client
 from zenml.logger import get_logger
 
 
-experimental_tracker = Client().activate_stack.experimental_tracker
-logger = get_logger
-@step(experiment_tracker=experimental_tracker.name)
+experiment_tracker = Client().active_stack.experiment_tracker
+@step(experiment_tracker=experiment_tracker.name)
+
+
 def train(
     x_train: pd.DataFrame,
     x_test: pd.DataFrame,
