@@ -1,3 +1,4 @@
+import os 
 import logging
 from abc import ABC, abstractmethod
 from typing import Union
@@ -253,3 +254,20 @@ class RMSE(Evaluation):
             
         except Exception as e:
             raise e  
+        
+
+
+def get_data_for_test():
+    try:
+        base_dir = os.path.dirname(__file__)
+        file_path = os.path.join(base_dir, "data", "olist_customers_dataset.csv")
+        df = pd.read_csv(file_path)
+        preprocess_strategy = DataPreprocessingStrategy()
+        data_cleaning = DataCleaning(df, preprocess_strategy)
+        df = data_cleaning.handle_data()
+        df.drop(["review_score"], axis=1, inplace=True)
+        result = df.to_json(orient="split")
+        return result
+    except Exception as e:
+        logging.error(e)
+        raise e
