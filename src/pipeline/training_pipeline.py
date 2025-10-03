@@ -29,10 +29,10 @@ def train_pipeline(ingest_data, clean_data, model_train, evaluation):
 
 if __name__ == "__main__":
     training = train_pipeline(
-        initate_data_ingestion(),
-        clean_data(),
-        train(),
-        evaluation(),
+        initate_data_ingestion,
+        clean_data,
+        train,
+        evaluation,
     )
 
     training.run()

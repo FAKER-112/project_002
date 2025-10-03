@@ -11,8 +11,6 @@ from zenml.logger import get_logger
 
 experiment_tracker = Client().active_stack.experiment_tracker
 @step(experiment_tracker=experiment_tracker.name)
-
-
 def train(
     x_train: pd.DataFrame,
     x_test: pd.DataFrame,
@@ -26,7 +24,7 @@ def train(
         if config.model_name == "LinearRegression":
             model= LinearRegresionModel()
             mlflow.sklearn.autolog()
-        elif config.model_name == "LightGBM":
+        elif config.model_name == "lightgbm":
             model= LightGBMModel()  
             mlflow.lightgbm.autolog()
         elif config.model_name == "XGBoost":
@@ -35,11 +33,14 @@ def train(
         elif config.model_name == "RandomForest":
             model= RandomForestModel()
             mlflow.sklearn.autolog()
-        tuner= HyperParameter(model,x_train=x_train,y_train=y_train,x_test=x_test,y_test=y_test)
-        if config.fine_tuning== True:
-            best_param= tuner.optimize()
-            trained_model= model.train( x_train, y_train, **best_param)
+        else:
+            raise ValueError("Model name not supported")
 
+        tuner= HyperParameter(model,x_train=x_train,y_train=y_train,x_test=x_test,y_test=y_test)
+
+        if config.fine_tuning:
+            best_param= tuner.optimize()
+            trained_model= model.train(x_train, y_train, **best_param)
         else:
             trained_model = model.train(x_train, y_train)
         return trained_model

@@ -15,6 +15,8 @@ class DataIngestion:
         file_path = os.path.join(base_dir, "data", "olist_customers_dataset.csv")
         data = pd.read_csv(file_path)
         return data
+    
+@step
 def initate_data_ingestion():
     try:
         DataIngestor= DataIngestion()
