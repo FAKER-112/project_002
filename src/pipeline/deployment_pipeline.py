@@ -120,8 +120,8 @@ def predictor(
 
 @pipeline(enable_cache=False, settings={'docker' : dockerSettings})
 def continous_deployment_pipeline(
-    minaccuracy : float=0.9,
-    worker=1,
+    min_accuracy : float=0.9,
+    worker:int =1,
     timeout : int=DEFAULT_SERVICE_START_STOP_TIMEOUT
 ):
     df=initate_data_ingestion()

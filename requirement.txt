@@ -16,3 +16,5 @@ zenml stack describe
 ORCHESTRATOR      default
 ARTIFACT_STORE    default
 EXPERIMENT_TRACKER mlflow_tracker
+zenml model-deployer register mlflow_deployer --flavor=mlflow
+zenml stack update <your_stack_name> -d mlflow_deployer
