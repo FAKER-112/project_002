@@ -59,6 +59,16 @@ def prediction_service_loader(
     running : bool =True,
     model_name: str ='model'
 )->MLFlowDeploymentService:
+    """Get the prediction service started by the deployment pipeline.
+
+    Args:
+        pipeline_name: name of the pipeline that deployed the MLflow prediction
+            server
+        step_name: the name of the step that deployed the MLflow prediction
+            server
+        running: when this flag is set, the step only returns a running service
+        model_name: the name of the model that is deployed
+    """
     Model_Deployer=MLFlowModelDeployer.get_active_model_deployer()
     existing_service=Model_Deployer.find_model_server(
         pipeline_name=pipeline_name,
@@ -73,3 +83,64 @@ def prediction_service_loader(
             f"pipeline for the '{model_name}' model is currently "
             f"running."
         )
+    print(existing_service)
+    print(type(existing_service))
+    return existing_service[0]
+
+@step
+def predictor(
+    service: MLFlowDeploymentService,
+    data: np.ndarray
+)->np.ndarray:
+    """Run an inference request against a prediction service"""
+
+    service.start(timeout=10)  # should be a NOP if already started
+    data = json.loads(data)
+    data.pop("columns")
+    data.pop("index")
+    columns_for_df = [
+        "payment_sequential",
+        "payment_installments",
+        "payment_value",
+        "price",
+        "freight_value",
+        "product_name_lenght",
+        "product_description_lenght",
+        "product_photos_qty",
+        "product_weight_g",
+        "product_length_cm",
+        "product_height_cm",
+        "product_width_cm",
+    ]
+    df = pd.DataFrame(data["data"], columns=columns_for_df)
+    json_list = json.loads(json.dumps(list(df.T.to_dict().values())))
+    data = np.array(json_list)
+    prediction = service.predict(data)
+    return prediction
+
+@pipeline(enable_cache=False, settings={'docker' : dockerSettings})
+def continous_deployment_pipeline(
+    minaccuracy : float=0.9,
+    worker=1,
+    timeout : int=DEFAULT_SERVICE_START_STOP_TIMEOUT
+):
+    df=initate_data_ingestion()
+    x_train, x_test, y_train, y_test = clean_data(df)
+    model = train(x_train, x_test, y_train, y_test)
+    mse, rmse = evaluation(model, x_test, y_test)
+    deployment_decision=  deployment_trigger(accuracy= mse)
+    mlflow_model_deployer_step(
+        model= model,
+        deploy_decision= deployment_decision,
+        workers=worker,
+        timeout=timeout
+    )
+@pipeline(enable_cache=False,settings={'docker': dockerSettings})
+def inference_pipeline(pipeline_name :str, pipeline_step_name:str):
+    batch_data =dynamic_importer()
+    model_deployment_service =prediction_service_loader(
+        pipeline_name=pipeline_name,
+        pipeline_step_name= pipeline_step_name,
+        running=False
+    )
+    predictor(service= model_deployment_service, data= batch_data)
